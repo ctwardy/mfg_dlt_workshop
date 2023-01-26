@@ -15,7 +15,7 @@ project_dir = f"/home/{username}/kafka_wind_turbine_dlt_streaming"
 
 checkpoint_location = f"{project_dir}/kafka_checkpoint"
 
-topic = f"wind_turbine_dlt_streaming_8"
+topic = "wind_turbine_dlt_streaming_8"
 
 # COMMAND ----------
 
@@ -36,13 +36,19 @@ uuidUdf= udf(lambda : uuid.uuid4().hex,StringType())
 input_path = "/mnt/field-demos/streaming/iot_turbine/incoming-data-json"
 input_schema = spark.read.json(input_path).schema
 
-input_stream = (spark
-  .readStream
-  .schema(input_schema)
-  .json(input_path)
-  .withColumn("TIMESTAMP", to_timestamp(col('TIMESTAMP'),"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")+expr("INTERVAL "+str(addmonths)+" MONTHS"))
-  .withColumn("processingTime", lit(datetime.now().timestamp()).cast("timestamp"))
-  .withColumn("eventId", uuidUdf()))
+input_stream = (
+    spark.readStream.schema(input_schema)
+    .json(input_path)
+    .withColumn(
+        "TIMESTAMP",
+        to_timestamp(col('TIMESTAMP'), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+        + expr(f"INTERVAL {addmonths} MONTHS"),
+    )
+    .withColumn(
+        "processingTime", lit(datetime.now().timestamp()).cast("timestamp")
+    )
+    .withColumn("eventId", uuidUdf())
+)
 
 # COMMAND ----------
 
